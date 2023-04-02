@@ -16,6 +16,21 @@ const string CLOSINGTIME = "closingTime";
 const string RANK = "rank";
 const string END_PRINT = "---";
 
+#define MINUTES_IN_AN_HOUR 60
+#define MINUTES_IN_HALF_AN_HOUR 30
+#define NUMBER_OF_ELEMENTS 4
+#define NOT_FOUND -1
+#define FOUND 0
+#define NOT_VISITED_BEFORE 0
+#define VISITED_BEFORE 1
+#define ZERO 0
+#define ONE 1
+#define TWO 2
+#define THREE 3
+#define EIGHT 8
+#define TEN 10
+#define FORTY_FIVE 45
+
 struct place_info{
     vector<string> name;
     vector<int> openingTime;
@@ -28,15 +43,15 @@ const string VISIT_FROM = "Visit from ";
 const string UNTIL = " until ";
 
 int find_number_of_places(vector<string> readed_string){
-    int num_of_places = readed_string.size() / 4 - 1;
+    int num_of_places = readed_string.size() / NUMBER_OF_ELEMENTS - ONE;
     return num_of_places;
 }
 
 vector<int> find_order_of_datas(vector<string> readed_string){
     vector<int> main_order;
     vector<string> desired_order = { NAME,OPENINGTIME,CLOSINGTIME,RANK };
-    for (int i=0;i<4;i++){ 
-        for (int j = 0;j<4; j++){ 
+    for (int i=ZERO; i < NUMBER_OF_ELEMENTS; i++){ 
+        for (int j = ZERO; j < NUMBER_OF_ELEMENTS; j++){ 
             if (desired_order[i] == readed_string[j]){
                 main_order.push_back(j);
             }
@@ -46,8 +61,8 @@ vector<int> find_order_of_datas(vector<string> readed_string){
 }
 
 int convert_time_to_minutes(string string_time){
-    int minutes = 0;
-    minutes = stoi(string_time.substr(0, 2)) * 60 + stoi(string_time.substr(3, 2));
+    int minutes = ZERO;
+    minutes = stoi(string_time.substr(ZERO, TWO)) * MINUTES_IN_AN_HOUR + stoi(string_time.substr(THREE, TWO));
     return minutes;
 }
 
@@ -55,13 +70,13 @@ place_info create_struction_for_places(vector<string> input_string){
     place_info place_info;
     int number_of_places = find_number_of_places(input_string);
     vector<int> order_of_informations = find_order_of_datas(input_string);
-    for (int i = 1; i <= number_of_places; i++){
-        place_info.name.push_back(input_string[order_of_informations[0] + i * 4]);
-        place_info.openingTime.push_back(convert_time_to_minutes(input_string[order_of_informations[1] + i * 4]));
-        place_info.closingTime.push_back(convert_time_to_minutes(input_string[order_of_informations[2] + i * 4]));
-        int rank = stoi(input_string[order_of_informations[3] + i * 4]);
+    for (int i = ONE; i <= number_of_places; i++){
+        place_info.name.push_back(input_string[order_of_informations[ZERO] + i * NUMBER_OF_ELEMENTS]);
+        place_info.openingTime.push_back(convert_time_to_minutes(input_string[order_of_informations[ONE] + i * NUMBER_OF_ELEMENTS]));
+        place_info.closingTime.push_back(convert_time_to_minutes(input_string[order_of_informations[TWO] + i * NUMBER_OF_ELEMENTS]));
+        int rank = stoi(input_string[order_of_informations[THREE] + i * NUMBER_OF_ELEMENTS]);
         place_info.rank.push_back(rank);
-        place_info.visited_or_not.push_back(0);
+        place_info.visited_or_not.push_back(ZERO);
     }
     return place_info;
 }
@@ -85,14 +100,14 @@ place_info read_input_from_file(string input_address){
 
 string convert_minutes_to_time(int minutes_from_midnight){
     string time = "";
-    int hours = minutes_from_midnight / 60;
-    int minutes = minutes_from_midnight % 60;
-    if (hours < 10){
+    int hours = minutes_from_midnight / MINUTES_IN_AN_HOUR;
+    int minutes = minutes_from_midnight % MINUTES_IN_AN_HOUR;
+    if (hours < TEN){
         time += "0";
     }
     time += to_string(hours);
     time += ":";
-    if (minutes < 10){
+    if (minutes < TEN){
         time += "0";
     }
     time += to_string(minutes);
@@ -110,11 +125,11 @@ bool check_place_is_open_or_not(int& start, int place_index, place_info place_in
 }
 
 bool check_place_is_visitable_or_not(int& start, int place_index, place_info place_info){
-    return (start + 30 + 15 <= place_info.closingTime[place_index]);
+    return (start + FORTY_FIVE <= place_info.closingTime[place_index]);
 }
 
 int choose_better_place_to_visit(int start, int chosen_place_index, int place_index, place_info place_info){
-    if (chosen_place_index == -1){
+    if (chosen_place_index == NOT_FOUND){
         return place_index;
     }
     if (start >= place_info.openingTime[place_index]){
@@ -126,7 +141,7 @@ int choose_better_place_to_visit(int start, int chosen_place_index, int place_in
         }
     }
     else{
-        if (place_info.openingTime[place_index] <= place_info.openingTime[chosen_place_index] && place_info.rank[place_index] < place_info.rank[chosen_place_index]){ 
+        if (place_info.openingTime[place_index] <= place_info.openingTime[chosen_place_index]  && place_info.rank[place_index] < place_info.rank[chosen_place_index]){ 
             return place_index;
         }
         return chosen_place_index;
@@ -134,14 +149,14 @@ int choose_better_place_to_visit(int start, int chosen_place_index, int place_in
 }
 
 void update_start_and_finish(int& start, int& finish, place_info place_info,int chosen_place_index){
-    if (start + 30 < place_info.openingTime[chosen_place_index]){
+    if (start + MINUTES_IN_HALF_AN_HOUR < place_info.openingTime[chosen_place_index]){
         start = place_info.openingTime[chosen_place_index];
     }
     else{
-        start += 30;
+        start += MINUTES_IN_HALF_AN_HOUR;
     }
-    if (place_info.closingTime[chosen_place_index] - start >= 60){
-        finish = start + 60;
+    if (place_info.closingTime[chosen_place_index] - start >= MINUTES_IN_AN_HOUR){
+        finish = start + MINUTES_IN_AN_HOUR;
     }
     else{
         finish = place_info.closingTime[chosen_place_index];
@@ -149,34 +164,34 @@ void update_start_and_finish(int& start, int& finish, place_info place_info,int 
 }
 
 int find_best_place(int &start, int &finish, place_info &place_info){
-    int chosen_place_index = -1;
-    for (int i = 0; i < place_info.name.size(); i++){
-        if (check_place_is_open_or_not(start,i,place_info) && check_place_is_visitable_or_not(start, i, place_info) && place_info.visited_or_not[i] == 0){
+    int chosen_place_index = NOT_FOUND;
+    for (int i = ZERO; i < place_info.name.size(); i++){
+        if (check_place_is_open_or_not(start,i,place_info) && check_place_is_visitable_or_not(start, i, place_info) && place_info.visited_or_not[i] == NOT_VISITED_BEFORE){
             chosen_place_index = choose_better_place_to_visit(start,chosen_place_index, i, place_info);
         }
     }
-    if (chosen_place_index == -1){
-        for (int i = 0; i < place_info.name.size(); i++){
-            if (start < place_info.openingTime[i] && check_place_is_visitable_or_not(start, i, place_info) && place_info.visited_or_not[i] == 0){
+    if (chosen_place_index == NOT_FOUND){
+        for (int i = ZERO; i < place_info.name.size(); i++){
+            if (start < place_info.openingTime[i] && check_place_is_visitable_or_not(start, i, place_info) && place_info.visited_or_not[i] == NOT_VISITED_BEFORE){
                 chosen_place_index = choose_better_place_to_visit(start, chosen_place_index, i, place_info);
             }
         }
     }
-    if (chosen_place_index >= 0){
-        place_info.visited_or_not[chosen_place_index] = 1;
+    if (chosen_place_index >= FOUND){
+        place_info.visited_or_not[chosen_place_index] = VISITED_BEFORE;
         update_start_and_finish(start, finish, place_info, chosen_place_index);
     }  
     return chosen_place_index;
 }
 
 int main(int argc, char* argv[]){
-    place_info place_info = read_input_from_file(argv[1]);
-    int finnish = 8 * 60, start = 8 * 60 - 30;
+    place_info place_info = read_input_from_file(argv[ONE]);
+    int finnish = EIGHT * MINUTES_IN_AN_HOUR, start = EIGHT * MINUTES_IN_AN_HOUR - MINUTES_IN_HALF_AN_HOUR;
     int index_of_place_to_visit = find_best_place(start, finnish, place_info);
-    while (index_of_place_to_visit != -1){
+    while (index_of_place_to_visit != NOT_FOUND){
         print_output(start, finnish, place_info, index_of_place_to_visit);
         start = finnish;
         index_of_place_to_visit = find_best_place(start, finnish, place_info);
     }
-    return 0;
+    return ZERO;
 }
